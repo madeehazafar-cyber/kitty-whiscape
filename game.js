@@ -1,4 +1,4 @@
-﻿// Kitty Whiscape: a single-file, canvas-based platformer.
+// Kitty Whiscape: canvas-based platformer logic.
     const screens = {
       loader: document.getElementById("loader"),
       prologue: document.getElementById("prologue"),
