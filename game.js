@@ -321,9 +321,17 @@
       typingTimer += dt;
       if (typingTimer > 22 && typingIndex < storyScenes[storyIndex].length) {
         typingTimer = 0;
-        typingIndex += 1;
-        storyText.textContent = storyScenes[storyIndex].slice(0, typingIndex);
+        typingIndex += 2;
+        storyText.textContent = visibleStoryText();
       }
+    }
+
+    function visibleStoryText() {
+      const line = storyScenes[storyIndex];
+      if (typingIndex >= line.length) return line;
+      const partial = line.slice(0, typingIndex);
+      const lastSpace = partial.lastIndexOf(" ");
+      return lastSpace > 0 ? partial.slice(0, lastSpace) : "";
     }
 
     function updatePlayer(dt) {
@@ -1306,7 +1314,7 @@
       ctx.fillStyle = "#fff1a8";
       ctx.font = "bold 12px monospace";
       ctx.fillText("SHOP", shop.x + 18, shop.y + 22);
-      ctx.fillText("2★", shop.x + 24, shop.y + 45);
+      ctx.fillText("2 stars", shop.x + 14, shop.y + 45);
       ctx.fillStyle = shop.item === "Web Boots" ? "#a98cff" : "#ff8cc6";
       ctx.beginPath();
       ctx.arc(shop.x + 36, shop.y + 66, 12, 0, Math.PI * 2);
@@ -1426,7 +1434,7 @@
       for (let i = 0; i < player.maxHealth; i += 1) {
         const span = document.createElement("span");
         span.className = "heart";
-        span.textContent = i < player.health ? "\u2665" : "\u2661";
+        span.textContent = i < player.health ? "HP" : "--";
         hud.hearts.appendChild(span);
       }
       hud.score.textContent = score;
