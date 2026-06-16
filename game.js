@@ -265,13 +265,14 @@
     function setupBoss() {
       boss = { x: 846, y: 330, w: 104, h: 186, hp: 12, maxHp: 12, timer: 0, defeated: false, glasses: { x: 882, y: 372, w: 36, h: 20 } };
       switches = [
-        { x: 450, y: 296, w: 34, h: 20, used: false },
-        { x: 832, y: 216, w: 34, h: 20, used: false }
+        { x: 820, y: 252, w: 38, h: 24, used: false },
+        { x: 906, y: 252, w: 38, h: 24, used: false }
       ];
       chandeliers = [
-        { x: 462, y: 70, targetY: 350, falling: false, fallen: false },
-        { x: 844, y: 70, targetY: 350, falling: false, fallen: false }
+        { x: 878, y: 70, targetY: 350, falling: false, fallen: false },
+        { x: 922, y: 70, targetY: 350, falling: false, fallen: false }
       ];
+      showToast("Boss: web the gold switches or dash into Nancy's glasses");
     }
 
     function startGame() {
@@ -493,9 +494,7 @@
       }
       switches.forEach((sw, i) => {
         if (!sw.used && overlap(player, sw)) {
-          sw.used = true;
-          chandeliers[i].falling = true;
-          burst(sw.x + 17, sw.y, "#ffd166", 16);
+          triggerBossSwitch(i);
         }
       });
       chandeliers.forEach(ch => {
@@ -512,6 +511,16 @@
       });
       if (overlap(player, boss.glasses) && (Math.abs(player.vx) > 7 || Math.abs(player.vy) > 8 || player.web)) damageBoss(1);
       if (overlap(player, boss)) hurt(1);
+    }
+
+    function triggerBossSwitch(index) {
+      const sw = switches[index];
+      if (!sw || sw.used) return;
+      sw.used = true;
+      chandeliers[index].falling = true;
+      noticeText = "Chandelier drop!";
+      noticeTimer = 900;
+      burst(sw.x + sw.w / 2, sw.y, "#ffd166", 18);
     }
 
     function throwYarn() {
@@ -585,6 +594,21 @@
 
     function shootWeb() {
       if (gameState !== "game" || player.webStamina < 12) return;
+      if (boss && !boss.defeated) {
+        const hitSwitch = switches.findIndex(sw => !sw.used && pointInRect(mouse.x, mouse.y, sw, 22));
+        if (hitSwitch >= 0) {
+          triggerBossSwitch(hitSwitch);
+          player.webStamina = Math.max(0, player.webStamina - 10);
+          burst(mouse.x, mouse.y, "#ffd166", 14);
+          return;
+        }
+        if (pointInRect(mouse.x, mouse.y, boss.glasses, 26)) {
+          player.web = { x: boss.glasses.x + boss.glasses.w / 2, y: boss.glasses.y + boss.glasses.h / 2, life: 44 };
+          damageBoss(1);
+          player.webStamina = Math.max(0, player.webStamina - 14);
+          return;
+        }
+      }
       const target = findWebTarget(mouse.x, mouse.y);
       if (!target) {
         burst(player.x + 17, player.y + 17, "#a98cff", 6);
@@ -601,6 +625,10 @@
       }
       if (y < 130) return { x, y };
       return null;
+    }
+
+    function pointInRect(x, y, rect, pad = 0) {
+      return x >= rect.x - pad && x <= rect.x + rect.w + pad && y >= rect.y - pad && y <= rect.y + rect.h + pad;
     }
 
     function activateSense() {
@@ -1090,6 +1118,14 @@
       ctx.fillStyle = "rgba(255,241,179,0.9)";
       ctx.font = "bold 20px monospace";
       ctx.fillText(currentRoom.name, 36, 40);
+      if (currentRoom.boss && boss && !boss.defeated) {
+        ctx.fillStyle = "rgba(7,8,22,0.72)";
+        roundRect(330, 56, 380, 44, 16);
+        ctx.fill();
+        ctx.fillStyle = "#fff1b8";
+        ctx.font = "bold 15px Trebuchet MS";
+        ctx.fillText("Shoot gold switches or web-dash Nancy's glasses", 354, 83);
+      }
       const finalLocked = roomIndex === rooms.length - 1 && boss && !boss.defeated;
       ctx.fillStyle = finalLocked ? "rgba(255,85,112,0.65)" : "rgba(124,244,165,0.85)";
       roundRect(currentRoom.exit[0], currentRoom.exit[1], 44, 88, 18);
